@@ -29,6 +29,16 @@ input {
   text-align: center;
   padding: 1%;
 }
+input.separator {
+  display: inline;
+  border: 1px solid #ccc;
+  margin: 0 auto;
+  font-size: 14px;
+  height: 30px;
+  width: 15px;
+  text-align: center;
+  padding: 0 10px;
+}
 select {
   font-size: 16px;
   -webkit-appearance: none;
@@ -105,6 +115,11 @@ li {
   text-align: center;
 }
 .passphrase-options {
+  margin-top: 1%;
+  text-align: center;
+}
+.passphrase-separator {
+  display: inline;
   margin-top: 1%;
   text-align: center;
 }
@@ -200,10 +215,12 @@ code, .password {
   <p class="crack-time-label">Approximate Crack Time: <span class="crack-time">0 seconds</span></p>
   <div class="passphrase-options">
     <select id="passphrase_select">
-      <option value="4" selected>Four-word passphrase, with spaces</option>
-      <option value="5">Five-word passphrase, with spaces</option>
-      <option value="12">Twelve-word passphrase, with spaces</option>
+      <option value="4" selected>Four-word passphrase</option>
+      <option value="5">Five-word passphrase</option>
+      <option value="12">Twelve-word passphrase</option>
     </select>
+    <p class="passphrase-separator"> with separator: </p>
+    <input class="separator" id="separator" type="text" value=" " onmouseover="this.select()"/>
     <button class="btn-generate">Generate New Passphrase</button>
   </div>
   <div class="social-buttons">
@@ -213,12 +230,6 @@ code, .password {
   </div>
   <h2 id="why-should-i-use-a-random-passphrase-">Why should I use a random passphrase?</h2>
 <p>Because humans are terrible at creating secure passwords. The <a href="http://xkcd.com/936/">famous xkcd comic</a> got it right: humans have been trained to use <b>hard-to-remember</b> passwords that are <b>easy</b> for computers to guess.</p>
-<p style="text-align:center;" class="adsbox">
-  <span style="font-size: 12px; color: rgba(0,0,0,0.1)">ADVERTISEMENT</span><br/>
-  <a href="https://www.anrdoezrs.net/n2117iqzwqyDNGEGMEEDFHIHJLHL" target="_blank">
-    <img src="https://www.awltovhc.com/a9103xjnbhf0A313911024546848" alt="" border="0"/>
-  </a>
-</p>
 <p>Try as we might, humans usually end up using one of a few predictable patterns when creating passwords. We base them on things we can remember, such as names, locations, dates or just common English words. Then, we add some spice with a capital letter, some numbers, or a symbol.</p>
 <p>Does your password fall into this group?</p>
 <table>
@@ -323,8 +334,9 @@ code, .password {
 <p><span style="color: #000;">belief romanian bridge profit</span><br><span style="color: #333;">arts started bundle disease</span><br><span style="color: #666;">delay gradual asset centers</span><br><span style="color: #999;">keating post warburg johnson</span><br><span style="color: #AAA;">efforts denying billed buy</span><br><span style="color: #CCC;">whose category fonts mutual</span><br><span style="color: #EEE;">easing autonomy weight five</span></p>
 <p>And so on.</p>
 <h2 id="should-i-really-be-getting-my-password-from-a-website-">Should I really be getting my password from a website?</h2>
-<p>Honestly? Probably not. But in this page&#39;s defense, all passwords are generated in your browser and are not saved or sent anywhere.</p>
-<p>For the truly paranoid, I recommend something called <a href="http://world.std.com/~reinhold/diceware.html">diceware</a>, which is a completely offline, non-computer based method of creating passphrases. It involves six dice, and a printed wordlist. The author also recommends you close your blinds while doing it.</p>
+<p>Honestly? Probably not. But in this page&#39;s defense, it makes <strong>zero</strong> external calls (no images, no javascript). Check your browser&#39;s network tab to verify. The passwords are all created by code contained in this page, and they are never stored.</p>
+<p>For extra security, this page is designed to run entirely offline: <a href="/generate_passphrase.html" download>save</a> this page to your hard drive, disconnect from the internet, and open it in a browser. This way you can assure that the passwords are not being transmitted anywhere.</p>
+<p>And for the truly paranoid, I recommend something called <a href="http://world.std.com/~reinhold/diceware.html">diceware</a>, which is a completely offline, non-computer based method of creating passphrases. It involves six dice, and a printed wordlist. The author also recommends you close your blinds while doing it.</p>
 <h2 id="thanks-for-reading-and-stay-secure-">Thanks for reading, and stay secure!</h2>
 
 </div>
@@ -8187,7 +8199,7 @@ function generatePassword(numberOfWords) {
       generatedPasswordArray.push(wordlist[index]);
   }
 
-  return generatedPasswordArray.join(' ');
+  return generatedPasswordArray;
 }
 
 function setStyleFromWordNumber(passwordField, numberOfWords) {
@@ -8236,16 +8248,19 @@ function calculateAndSetCrackTime() {
 
 var selectField = document.getElementById('passphrase_select');
 var passwordField = document.getElementById('passphrase');
+var separatorField = document.getElementById('separator');
 var button = document.querySelector('.btn-generate');
 
 // Initially run it upon load
-passwordField.setAttribute('value', generatePassword(4));
+var passArray = generatePassword(4);
+passwordField.setAttribute('value', passArray.join(' '));
 calculateAndSetCrackTime();
 
 // Listen for a button click
 button.addEventListener('click', function() {
   var numberOfWords = selectField.options[selectField.selectedIndex].value;
-  passwordField.value = generatePassword(numberOfWords);
+  passArray = generatePassword(numberOfWords);
+  passwordField.value = passArray.join(separatorField.value);
   setStyleFromWordNumber(passwordField, numberOfWords);
   calculateAndSetCrackTime();
 });
@@ -8255,15 +8270,12 @@ passwordField.addEventListener('input', function (evt) {
   calculateAndSetCrackTime();
 });
 
-</script>
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-152061404-1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+// Listen for password value change
+separatorField.addEventListener('input', function (evt) {
+  passwordField.value = passArray.join(separatorField.value);
+  calculateAndSetCrackTime();
+});
 
-  gtag('config', 'UA-152061404-1');
 </script>
 </body>
 </html>
